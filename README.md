@@ -7,10 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://nanoclaw.dev">nanoclaw.dev</a>&nbsp; • &nbsp;
   <a href="README_zh.md">中文</a>&nbsp; • &nbsp;
   <a href="README_ja.md">日本語</a>&nbsp; • &nbsp;
-  <a href="https://discord.gg/VDdww8qS42"><img src="https://img.shields.io/discord/1470188214710046894?label=Discord&logo=discord&v=2" alt="Discord" valign="middle"></a>&nbsp; • &nbsp;
   <a href="repo-tokens"><img src="repo-tokens/badge.svg" alt="34.9k tokens, 17% of context window" valign="middle"></a>
 </p>
 
@@ -40,15 +38,15 @@ Test suite: **58 tests passing** (`python -m pytest tests/ -v`).
 
 ### Local AI Agents Integration
 
-J Claw participates in the `P:\local_ai_agents` unified workspace alongside Plex and localcoder.
+J Claw participates in the `local_ai_agents` unified workspace alongside Plex and localcoder. Place this repo next to the other workspace projects and run orchestrators from the workspace root.
 
 - Standalone real-server test: [`test_jclaw_standalone.py`](test_jclaw_standalone.py)
-- Shared orchestration (run from `P:\local_ai_agents`): `python orchestrate_build_robust.py`
-- Shared model registry: `P:/local_ai_agents/.shared_model_registry.json`
+- Shared orchestration: `python orchestrate_build_robust.py`
+- Shared model registry: `../.shared_model_registry.json`
 - Lightweight local runner (`JCLAW_USE_LOCAL_RUNNER=true`) is used for single-shot prompts in the orchestration workflow.
-- Easy launchers (no terminal expertise needed):
-  - GUI: `python P:\local_ai_agents\launcher_gui.py` → click **jclaw Dashboard**
-  - CLI: `python P:\local_ai_agents\launcher_cli.py tool jclaw-dashboard`
+- Easy launchers (run from the workspace root):
+  - GUI: `python launcher_gui.py` → click **jclaw Dashboard**
+  - CLI: `python launcher_cli.py tool jclaw-dashboard`
 
 ---
 

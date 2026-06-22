@@ -13,7 +13,7 @@ Write `/tmp/nanoclaw-diagnostics.json`. No paths, usernames, hostnames, or IP ad
 
 ```json
 {
-  "api_key": "phc_fx1Hhx9ucz8GuaJC8LVZWO8u03yXZZJJ6ObS4yplnaP",
+  "api_key": "<YOUR_POSTHOG_PROJECT_API_KEY>",
   "event": "setup_complete",
   "distinct_id": "<uuid>",
   "properties": {
