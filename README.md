@@ -38,6 +38,15 @@ New features (borrowed from oh-my-pi + Hermes):
 
 Test suite: **58 tests passing** (`python -m pytest tests/ -v`).
 
+### Local AI Agents Integration
+
+J Claw participates in the `P:\local_ai_agents` unified workspace alongside Plex and localcoder.
+
+- Standalone real-server test: [`test_jclaw_standalone.py`](test_jclaw_standalone.py)
+- Shared orchestration (run from `P:\local_ai_agents`): `python orchestrate_build_robust.py`
+- Shared model registry: `P:/local_ai_agents/.shared_model_registry.json`
+- Lightweight local runner (`JCLAW_USE_LOCAL_RUNNER=true`) is used for single-shot prompts in the orchestration workflow.
+
 ---
 
 ## Why I Built J Claw
