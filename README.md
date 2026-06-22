@@ -46,6 +46,9 @@ J Claw participates in the `P:\local_ai_agents` unified workspace alongside Plex
 - Shared orchestration (run from `P:\local_ai_agents`): `python orchestrate_build_robust.py`
 - Shared model registry: `P:/local_ai_agents/.shared_model_registry.json`
 - Lightweight local runner (`JCLAW_USE_LOCAL_RUNNER=true`) is used for single-shot prompts in the orchestration workflow.
+- Easy launchers (no terminal expertise needed):
+  - GUI: `python P:\local_ai_agents\launcher_gui.py` → click **jclaw Dashboard**
+  - CLI: `python P:\local_ai_agents\launcher_cli.py tool jclaw-dashboard`
 
 ---
 
