@@ -21,7 +21,12 @@ OUTPUT_END_MARKER = "---JCLAW_OUTPUT_END---"
 
 def _call_local_llm(prompt: str) -> str:
     """Call the local OpenAI-compatible API."""
-    base_url = os.environ.get("ANTHROPIC_BASE_URL", "http://127.0.0.1:8080/v1")
+    # Prefer explicit local API env vars, then fallback to ANTHROPIC_BASE_URL
+    base_url = (
+        os.environ.get("JCLAW_GATEWAY_BASE_URL")
+        or os.environ.get("LLAMACPP_BASE_URL")
+        or os.environ.get("ANTHROPIC_BASE_URL", "http://127.0.0.1:8080/v1")
+    )
     api_key = os.environ.get("ANTHROPIC_API_KEY", "dummy")
     model = os.environ.get("JCLAW_MODEL", "local-model")
 
@@ -38,12 +43,15 @@ def _call_local_llm(prompt: str) -> str:
     except Exception:
         pass
 
-    url = f"{base_url}/chat/completions"
+    # Use legacy /v1/completions endpoint — more compatible with local models
+    # such as Qwopus/Qwen3.5 that may return empty chat-completion content.
+    url = f"{base_url}/completions"
     data = json.dumps({
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "prompt": prompt,
         "max_tokens": 2048,
         "temperature": 0.7,
+        "stop": ["<|im_end|>", "<|endoftext|>"],
     }).encode("utf-8")
 
     req = urllib.request.Request(
@@ -58,7 +66,7 @@ def _call_local_llm(prompt: str) -> str:
     try:
         with urllib.request.urlopen(req, timeout=120.0) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            return result["choices"][0]["message"]["content"]
+            return result["choices"][0]["text"]
     except Exception as e:
         return f"[Local LLM error: {e}]"
 
