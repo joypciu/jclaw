@@ -1,0 +1,28 @@
+model_list:
+  - model_name: jclaw-main
+    litellm_params:
+      model: openai/your-kobold-model-name
+      api_base: http://127.0.0.1:5001/v1
+      api_key: dummy-key
+      drop_params: true
+  - model_name: claude-3-5-sonnet-latest
+    litellm_params:
+      model: openai/your-kobold-model-name
+      api_base: http://127.0.0.1:5001/v1
+      api_key: dummy-key
+      drop_params: true
+  - model_name: claude-3-7-sonnet-latest
+    litellm_params:
+      model: openai/your-kobold-model-name
+      api_base: http://127.0.0.1:5001/v1
+      api_key: dummy-key
+      drop_params: true
+  - model_name: claude-sonnet-4-0
+    litellm_params:
+      model: openai/your-kobold-model-name
+      api_base: http://127.0.0.1:5001/v1
+      api_key: dummy-key
+      drop_params: true
+
+general_settings:
+  master_key: dummy-key

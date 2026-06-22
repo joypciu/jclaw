@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/Gitlawb/openclaude/main/ollama_provider.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/Gitlawb/openclaude/main/smart_router.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/Gitlawb/openclaude/main/atomic_chat_provider.py\")",
+      "Bash(curl -sL \"https://github.com/Gitlawb/openclaude\")",
+      "Bash(curl -sL \"https://github.com/ultraworkers/claw-code/\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/ultraworkers/claw-code/main/src/query_engine.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/ultraworkers/claw-code/main/src/runtime.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/ultraworkers/claw-code/main/src/tools.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/ultraworkers/claw-code/main/src/session_store.py\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/ultraworkers/claw-code/main/PARITY.md\")"
+    ],
+    "additionalDirectories": [
+      "p:\\jclaw\\.git"
+    ]
+  }
+}
