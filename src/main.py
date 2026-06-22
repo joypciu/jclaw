@@ -602,6 +602,11 @@ def cmd_prompt(args: argparse.Namespace) -> int:
     if not text:
         print("Error: no prompt text provided", file=sys.stderr)
         return 1
+    # Allow CLI-level timeout override for single-shot prompts
+    timeout_sec = getattr(args, "timeout", 0)
+    if timeout_sec and timeout_sec > 0:
+        os.environ["CONTAINER_TIMEOUT"] = str(timeout_sec * 1000)
+        os.environ["IDLE_TIMEOUT"] = str(timeout_sec * 1000)
     from .cli import run_single_prompt
     return run_single_prompt(text, group_name=args.group, session_id=args.session or None)
 
@@ -758,6 +763,7 @@ def build_parser() -> argparse.ArgumentParser:
     prompt_cmd.add_argument("text", nargs="?", default="", help="Prompt text (reads stdin if omitted)")
     prompt_cmd.add_argument("--group", default="", help="Target group name or folder")
     prompt_cmd.add_argument("--session", default="", help="Session ID to use")
+    prompt_cmd.add_argument("--timeout", type=int, default=0, help="Max seconds to wait for response (0 = use env default)")
     prompt_cmd.set_defaults(func=cmd_prompt)
 
     # ── ui ─────────────────────────────────────────────────────────────────────

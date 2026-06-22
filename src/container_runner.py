@@ -166,11 +166,31 @@ async def run_container_agent(
     """
     agent_js = AGENT_RUNNER_DIR / "dist" / "index.js"
     if not agent_js.exists():
-        return ContainerOutput(
-            status="error",
-            result=None,
-            error=f"Agent runner not built. Run: cd {AGENT_RUNNER_DIR} && npm run build",
-        )
+        logger.warning("Agent runner not built; attempting auto-build at %s", AGENT_RUNNER_DIR)
+        try:
+            result = subprocess.run(
+                [NODE_BIN, AGENT_RUNNER_DIR / "node_modules" / ".bin" / "tsc"],
+                cwd=str(AGENT_RUNNER_DIR),
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.returncode != 0 or not agent_js.exists():
+                return ContainerOutput(
+                    status="error",
+                    result=None,
+                    error=(
+                        f"Agent runner not built. Auto-build failed.\n"
+                        f"Run manually: cd {AGENT_RUNNER_DIR} && npm run build\n"
+                        f"Build stderr: {result.stderr[:500]}"
+                    ),
+                )
+        except Exception as e:
+            return ContainerOutput(
+                status="error",
+                result=None,
+                error=f"Agent runner not built and auto-build failed: {e}",
+            )
 
     payload = {
         "prompt": input_data.prompt,

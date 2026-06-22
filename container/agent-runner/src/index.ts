@@ -120,17 +120,23 @@ function selectModels(containerInput: ContainerInput): {
   const useWorkerForScheduled =
     (process.env.JCLAW_USE_WORKER_MODEL_FOR_SCHEDULED || 'true') !== 'false';
 
+  let model: string | undefined;
+  let fallbackModel: string | undefined;
+
   if (containerInput.isScheduledTask && workerModel && useWorkerForScheduled) {
-    return {
-      model: workerModel,
-      fallbackModel: configuredFallback || mainModel,
-    };
+    model = workerModel;
+    fallbackModel = configuredFallback || mainModel;
+  } else {
+    model = mainModel;
+    fallbackModel = configuredFallback || workerModel;
   }
 
-  return {
-    model: mainModel,
-    fallbackModel: configuredFallback || workerModel,
-  };
+  // Guard: fallback must differ from main model, otherwise the SDK errors
+  if (fallbackModel === model) {
+    fallbackModel = undefined;
+  }
+
+  return { model, fallbackModel };
 }
 
 function writeOutput(output: ContainerOutput): void {
