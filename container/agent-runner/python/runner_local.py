@@ -45,11 +45,12 @@ def _call_local_llm(prompt: str) -> str:
 
     # Use legacy /v1/completions endpoint — more compatible with local models
     # such as Qwopus/Qwen3.5 that may return empty chat-completion content.
+    max_tokens = int(os.environ.get("JCLAW_LOCAL_RUNNER_MAX_TOKENS", "4096"))
     url = f"{base_url}/completions"
     data = json.dumps({
         "model": model,
         "prompt": prompt,
-        "max_tokens": 2048,
+        "max_tokens": max_tokens,
         "temperature": 0.7,
         "stop": ["<|im_end|>", "<|endoftext|>"],
     }).encode("utf-8")
