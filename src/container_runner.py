@@ -164,8 +164,16 @@ async def run_container_agent(
       - Errors with partial streaming output are NOT retried (agent produced
         a result; don't double-execute).
     """
+    # Prefer lightweight local runner for direct local-LLM calls (faster,
+    # no Claude SDK overhead).  Falls back to full agent-runner if unavailable.
+    use_local_runner = os.environ.get("JCLAW_USE_LOCAL_RUNNER", "").lower() in ("1", "true", "yes")
+    local_runner = AGENT_RUNNER_DIR / "python" / "runner_local.py"
     agent_js = AGENT_RUNNER_DIR / "dist" / "index.js"
-    if not agent_js.exists():
+
+    if use_local_runner and local_runner.exists():
+        # Fast path: lightweight Python runner calling local API directly
+        pass
+    elif not agent_js.exists():
         logger.warning("Agent runner not built; attempting auto-build at %s", AGENT_RUNNER_DIR)
         try:
             result = subprocess.run(
@@ -176,21 +184,29 @@ async def run_container_agent(
                 timeout=60,
             )
             if result.returncode != 0 or not agent_js.exists():
+                if local_runner.exists():
+                    logger.warning("Build failed; falling back to lightweight local runner")
+                    use_local_runner = True
+                else:
+                    return ContainerOutput(
+                        status="error",
+                        result=None,
+                        error=(
+                            f"Agent runner not built. Auto-build failed.\n"
+                            f"Run manually: cd {AGENT_RUNNER_DIR} && npm run build\n"
+                            f"Build stderr: {result.stderr[:500]}"
+                        ),
+                    )
+        except Exception as e:
+            if local_runner.exists():
+                logger.warning("Build failed; falling back to lightweight local runner")
+                use_local_runner = True
+            else:
                 return ContainerOutput(
                     status="error",
                     result=None,
-                    error=(
-                        f"Agent runner not built. Auto-build failed.\n"
-                        f"Run manually: cd {AGENT_RUNNER_DIR} && npm run build\n"
-                        f"Build stderr: {result.stderr[:500]}"
-                    ),
+                    error=f"Agent runner not built and auto-build failed: {e}",
                 )
-        except Exception as e:
-            return ContainerOutput(
-                status="error",
-                result=None,
-                error=f"Agent runner not built and auto-build failed: {e}",
-            )
 
     payload = {
         "prompt": input_data.prompt,
@@ -212,7 +228,8 @@ async def run_container_agent(
             await asyncio.sleep(backoff)
 
         last_output = await _run_agent_once(
-            group, input_data, payload, agent_js, on_process, on_output
+            group, input_data, payload, agent_js, on_process, on_output,
+            use_local_runner=use_local_runner,
         )
 
         # Don't retry if we got streaming output — partial result is better than double-execute
@@ -239,6 +256,7 @@ async def _run_agent_once(
     agent_js: Path,
     on_process: Callable[[asyncio.subprocess.Process, str], None],
     on_output: Optional[Callable[[ContainerOutput], Awaitable[None]]],
+    use_local_runner: bool = False,
 ) -> ContainerOutput:
     """Single agent execution attempt (no retry logic)."""
     start = time.time()
@@ -256,7 +274,6 @@ async def _run_agent_once(
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     # Write payload to temp file — Windows-safe IPC (avoids stdin-EOF hang).
-    # Node reads argv[2] as a file path and removes the file after parsing.
     tmp_fd, tmp_path = tempfile.mkstemp(suffix=".json", prefix="jclaw-input-")
     try:
         with os.fdopen(tmp_fd, "w", encoding="utf-8") as fh:
@@ -265,16 +282,29 @@ async def _run_agent_once(
         os.close(tmp_fd)
         raise
 
-    proc = await asyncio.create_subprocess_exec(
-        NODE_BIN,
-        str(agent_js),
-        tmp_path,           # argv[2] — input file path (Node deletes it after reading)
-        stdin=asyncio.subprocess.DEVNULL,   # no stdin needed; avoids Windows pipe-EOF bug
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        env=env,
-        cwd=str(group_dir),
-    )
+    if use_local_runner:
+        local_runner = AGENT_RUNNER_DIR / "python" / "runner_local.py"
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable,
+            str(local_runner),
+            tmp_path,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+            cwd=str(group_dir),
+        )
+    else:
+        proc = await asyncio.create_subprocess_exec(
+            NODE_BIN,
+            str(agent_js),
+            tmp_path,           # argv[2] — input file path (Node deletes it after reading)
+            stdin=asyncio.subprocess.DEVNULL,   # no stdin needed; avoids Windows pipe-EOF bug
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+            cwd=str(group_dir),
+        )
 
     on_process(proc, run_name)
 
